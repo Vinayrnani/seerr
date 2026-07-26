@@ -15,10 +15,11 @@ import {
   ArrowPathIcon,
   CheckIcon,
   PencilIcon,
+  PlayIcon,
   TrashIcon,
   XMarkIcon,
 } from '@heroicons/react/24/solid';
-import { MediaRequestStatus, MediaStatus } from '@server/constants/media';
+import { MediaRequestMethod, MediaRequestStatus, MediaStatus } from '@server/constants/media';
 import type { MediaRequest } from '@server/entity/MediaRequest';
 import type { NonFunctionProperties } from '@server/interfaces/api/common';
 import type { RequestResultsResponse } from '@server/interfaces/api/requestInterfaces';
@@ -26,6 +27,7 @@ import type { MovieDetails } from '@server/models/Movie';
 import type { TvDetails } from '@server/models/Tv';
 import axios from 'axios';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { FormattedRelativeTime, useIntl } from 'react-intl';
@@ -163,6 +165,19 @@ const RequestItemError = ({
                     }
                   />
                 )}
+                {requestData.method !== MediaRequestMethod.TORRENT && (
+                  <Badge
+                    badgeType={
+                      requestData.method === MediaRequestMethod.DIRECT_STREAM
+                        ? 'warning'
+                        : 'primary'
+                    }
+                  >
+                    {requestData.method === MediaRequestMethod.DIRECT_STREAM
+                      ? 'Direct'
+                      : 'Stream'}
+                  </Badge>
+                )}
               </div>
               <div className="card-field">
                 {hasPermission(
@@ -296,6 +311,7 @@ interface RequestItemProps {
 }
 
 const RequestItem = ({ request, revalidateList }: RequestItemProps) => {
+  const router = useRouter();
   const { ref, inView } = useInView({
     triggerOnce: true,
   });
@@ -774,6 +790,21 @@ const RequestItem = ({ request, revalidateList }: RequestItemProps) => {
                 <XMarkIcon />
                 <span>{intl.formatMessage(messages.cancelRequest)}</span>
               </ConfirmButton>
+            )}
+          {(requestData.method === MediaRequestMethod.TORRENT_STREAM ||
+            requestData.method === MediaRequestMethod.DIRECT_STREAM) &&
+            (requestData.status === MediaRequestStatus.APPROVED ||
+              requestData.status === MediaRequestStatus.COMPLETED) && (
+              <span className="w-full">
+                <Button
+                  className="w-full"
+                  buttonType="primary"
+                  onClick={() => router.push(`/stream/${requestData.id}`)}
+                >
+                  <PlayIcon />
+                  <span>Watch Stream</span>
+                </Button>
+              </span>
             )}
         </div>
       </div>

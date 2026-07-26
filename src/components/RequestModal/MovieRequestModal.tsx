@@ -7,7 +7,7 @@ import useToasts from '@app/hooks/useToasts';
 import { useUser } from '@app/hooks/useUser';
 import globalMessages from '@app/i18n/globalMessages';
 import defineMessages from '@app/utils/defineMessages';
-import { MediaStatus } from '@server/constants/media';
+import { MediaRequestMethod, MediaStatus } from '@server/constants/media';
 import type { MediaRequest } from '@server/entity/MediaRequest';
 import type { NonFunctionProperties } from '@server/interfaces/api/common';
 import type { QuotaResponse } from '@server/interfaces/api/userInterfaces';
@@ -57,6 +57,9 @@ const MovieRequestModal = ({
   const [isUpdating, setIsUpdating] = useState(false);
   const [requestOverrides, setRequestOverrides] =
     useState<RequestOverrides | null>(null);
+  const [method, setMethod] = useState<MediaRequestMethod>(
+    MediaRequestMethod.TORRENT
+  );
   const { addToast } = useToasts();
   const { data, error } = useSWR<MovieDetails>(`/api/v1/movie/${tmdbId}`, {
     revalidateOnMount: true,
@@ -94,6 +97,7 @@ const MovieRequestModal = ({
         mediaId: data?.id,
         mediaType: 'movie',
         is4k,
+        method,
         ignoreQuota: requestOverrides?.ignoreQuota,
         ...overrideParams,
       });
@@ -358,6 +362,79 @@ const MovieRequestModal = ({
           }
         />
       )}
+      <div className="mt-6">
+        <div className="mb-2 text-sm font-bold text-gray-300">
+          {intl.formatMessage({
+            id: 'components.RequestModal.method',
+            defaultMessage: 'Request Method',
+          })}
+        </div>
+        <div className="flex flex-col space-y-2">
+          <label className="flex cursor-pointer items-center space-x-2">
+            <input
+              type="radio"
+              name="method"
+              className="text-indigo-600"
+              checked={method === MediaRequestMethod.TORRENT}
+              onChange={() => setMethod(MediaRequestMethod.TORRENT)}
+            />
+            <span className="text-sm text-gray-300">
+              {intl.formatMessage({
+                id: 'components.RequestModal.methodTorrent',
+                defaultMessage: 'Torrent',
+              })}
+            </span>
+            <span className="text-xs text-gray-500">
+              {intl.formatMessage({
+                id: 'components.RequestModal.methodTorrentDesc',
+                defaultMessage: 'Download to media server (Radarr/Sonarr)',
+              })}
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-center space-x-2">
+            <input
+              type="radio"
+              name="method"
+              className="text-indigo-600"
+              checked={method === MediaRequestMethod.TORRENT_STREAM}
+              onChange={() => setMethod(MediaRequestMethod.TORRENT_STREAM)}
+            />
+            <span className="text-sm text-gray-300">
+              {intl.formatMessage({
+                id: 'components.RequestModal.methodTorrentStream',
+                defaultMessage: 'Torrent Stream',
+              })}
+            </span>
+            <span className="text-xs text-gray-500">
+              {intl.formatMessage({
+                id: 'components.RequestModal.methodTorrentStreamDesc',
+                defaultMessage: 'Stream directly from torrent (sequential download)',
+              })}
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-center space-x-2">
+            <input
+              type="radio"
+              name="method"
+              className="text-indigo-600"
+              checked={method === MediaRequestMethod.DIRECT_STREAM}
+              onChange={() => setMethod(MediaRequestMethod.DIRECT_STREAM)}
+            />
+            <span className="text-sm text-gray-300">
+              {intl.formatMessage({
+                id: 'components.RequestModal.methodDirectStream',
+                defaultMessage: 'Direct Stream',
+              })}
+            </span>
+            <span className="text-xs text-gray-500">
+              {intl.formatMessage({
+                id: 'components.RequestModal.methodDirectStreamDesc',
+                defaultMessage: 'Redirect to external streaming URL',
+              })}
+            </span>
+          </label>
+        </div>
+      </div>
       {(hasPermission(Permission.REQUEST_ADVANCED) ||
         hasPermission(Permission.MANAGE_REQUESTS)) && (
         <AdvancedRequester

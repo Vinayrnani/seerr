@@ -16,16 +16,18 @@ import {
   ArrowPathIcon,
   CheckIcon,
   PencilIcon,
+  PlayIcon,
   TrashIcon,
   XMarkIcon,
 } from '@heroicons/react/24/solid';
-import { MediaRequestStatus, MediaStatus } from '@server/constants/media';
+import { MediaRequestMethod, MediaRequestStatus, MediaStatus } from '@server/constants/media';
 import type { MediaRequest } from '@server/entity/MediaRequest';
 import type { NonFunctionProperties } from '@server/interfaces/api/common';
 import type { MovieDetails } from '@server/models/Movie';
 import type { TvDetails } from '@server/models/Tv';
 import axios from 'axios';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useIntl } from 'react-intl';
@@ -220,6 +222,7 @@ interface RequestCardProps {
 }
 
 const RequestCard = ({ request, onTitleData }: RequestCardProps) => {
+  const router = useRouter();
   const { ref, inView } = useInView({
     triggerOnce: true,
   });
@@ -481,6 +484,19 @@ const RequestCard = ({ request, onTitleData }: RequestCardProps) => {
                 }
               />
             )}
+            {requestData.method !== MediaRequestMethod.TORRENT && (
+              <Badge
+                badgeType={
+                  requestData.method === MediaRequestMethod.DIRECT_STREAM
+                    ? 'warning'
+                    : 'primary'
+                }
+              >
+                {requestData.method === MediaRequestMethod.DIRECT_STREAM
+                  ? 'Direct'
+                  : 'Stream'}
+              </Badge>
+            )}
           </div>
           <div className="flex flex-1 items-end space-x-2">
             {requestData.status === MediaRequestStatus.FAILED &&
@@ -615,6 +631,32 @@ const RequestCard = ({ request, onTitleData }: RequestCardProps) => {
                       onClick={() => deleteRequest()}
                     >
                       <XMarkIcon />
+                    </Button>
+                  </Tooltip>
+                </div>
+              )}
+            {(requestData.method === MediaRequestMethod.TORRENT_STREAM ||
+              requestData.method === MediaRequestMethod.DIRECT_STREAM) &&
+              (requestData.status === MediaRequestStatus.APPROVED ||
+                requestData.status === MediaRequestStatus.COMPLETED) && (
+                <div>
+                  <Button
+                    buttonType="primary"
+                    buttonSize="sm"
+                    className="hidden sm:block"
+                    onClick={() => router.push(`/stream/${requestData.id}`)}
+                  >
+                    <PlayIcon />
+                    <span>Watch Stream</span>
+                  </Button>
+                  <Tooltip content="Watch Stream">
+                    <Button
+                      buttonType="primary"
+                      buttonSize="sm"
+                      className="sm:hidden"
+                      onClick={() => router.push(`/stream/${requestData.id}`)}
+                    >
+                      <PlayIcon />
                     </Button>
                   </Tooltip>
                 </div>
