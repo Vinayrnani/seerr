@@ -400,6 +400,7 @@ export class MediaRequest {
         )
           ? user
           : undefined,
+        method: requestBody.method ?? MediaRequestMethod.TORRENT,
         is4k: requestBody.is4k,
         serverId: requestBody.serverId,
         profileId: profileId,
@@ -512,6 +513,7 @@ export class MediaRequest {
         )
           ? user
           : undefined,
+        method: requestBody.method ?? MediaRequestMethod.TORRENT,
         is4k: requestBody.is4k,
         serverId: requestBody.serverId,
         profileId: profileId,

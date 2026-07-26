@@ -259,5 +259,22 @@ export const startJobs = (): void => {
     cancelFn: () => blocklistedTagsProcessor.cancel(),
   });
 
+  scheduledJobs.push({
+    id: 'stream-cleanup',
+    name: 'Stream Cleanup',
+    type: 'process',
+    interval: 'hours',
+    cronSchedule: jobs['stream-cleanup'].schedule,
+    job: schedule.scheduleJob(jobs['stream-cleanup'].schedule, async () => {
+      logger.info('Starting scheduled job: Stream Cleanup', {
+        label: 'Jobs',
+      });
+      const { default: torrentStreamService } = await import(
+        '@server/lib/torrentstream'
+      );
+      await torrentStreamService.cleanExpiredStreams();
+    }),
+  });
+
   logger.info('Scheduled jobs loaded', { label: 'Jobs' });
 };

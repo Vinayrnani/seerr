@@ -8,6 +8,7 @@ import SonarrAPI from '@server/api/servarr/sonarr';
 import TheMovieDb from '@server/api/themoviedb';
 import { ANIME_KEYWORD_ID } from '@server/api/themoviedb/constants';
 import {
+  MediaRequestMethod,
   MediaRequestStatus,
   MediaStatus,
   MediaType,
@@ -19,6 +20,7 @@ import Season from '@server/entity/Season';
 import SeasonRequest from '@server/entity/SeasonRequest';
 import notificationManager, { Notification } from '@server/lib/notifications';
 import { getSettings } from '@server/lib/settings';
+import torrentStreamService from '@server/lib/torrentstream';
 import logger from '@server/logger';
 import { isEqual, truncate } from 'lodash';
 import type {
@@ -180,10 +182,62 @@ export class MediaRequestSubscriber implements EntitySubscriberInterface<MediaRe
     }
   }
 
+  public async sendToStreamingService(entity: MediaRequest): Promise<void> {
+    if (entity.status !== MediaRequestStatus.APPROVED) {
+      return;
+    }
+
+    if (entity.method === MediaRequestMethod.DIRECT_STREAM) {
+      if (!entity.streamUrl) {
+        logger.warn('DIRECT_STREAM request has no streamUrl', {
+          label: 'Media Request',
+          requestId: entity.id,
+          mediaId: entity.media.id,
+        });
+        const requestRepository = getRepository(MediaRequest);
+        entity.status = MediaRequestStatus.FAILED;
+        await requestRepository.save(entity);
+        return;
+      }
+      logger.info('DIRECT_STREAM request processed', {
+        label: 'Media Request',
+        requestId: entity.id,
+        mediaId: entity.media.id,
+        streamUrl: entity.streamUrl,
+      });
+      return;
+    }
+
+    if (entity.method === MediaRequestMethod.TORRENT_STREAM) {
+      if (entity.type !== MediaType.MOVIE) {
+        logger.warn('TORRENT_STREAM only supports movies currently', {
+          label: 'Media Request',
+          requestId: entity.id,
+          mediaId: entity.media.id,
+        });
+        const requestRepository = getRepository(MediaRequest);
+        entity.status = MediaRequestStatus.FAILED;
+        await requestRepository.save(entity);
+        return;
+      }
+
+      logger.info('Starting TORRENT_STREAM for request', {
+        label: 'Media Request',
+        requestId: entity.id,
+        mediaId: entity.media.id,
+      });
+
+      // The actual torrent start happens via the stream API when the user
+      // initiates playback. The subscriber just marks it ready.
+      return;
+    }
+  }
+
   public async sendToRadarr(entity: MediaRequest): Promise<void> {
     if (
       entity.status === MediaRequestStatus.APPROVED &&
-      entity.type === MediaType.MOVIE
+      entity.type === MediaType.MOVIE &&
+      entity.method === MediaRequestMethod.TORRENT
     ) {
       try {
         const mediaRepository = getRepository(Media);
@@ -477,7 +531,8 @@ export class MediaRequestSubscriber implements EntitySubscriberInterface<MediaRe
   public async sendToSonarr(entity: MediaRequest): Promise<void> {
     if (
       entity.status === MediaRequestStatus.APPROVED &&
-      entity.type === MediaType.TV
+      entity.type === MediaType.TV &&
+      entity.method === MediaRequestMethod.TORRENT
     ) {
       try {
         const mediaRepository = getRepository(Media);
@@ -842,7 +897,13 @@ export class MediaRequestSubscriber implements EntitySubscriberInterface<MediaRe
       media[statusKey] !== MediaStatus.PARTIALLY_AVAILABLE &&
       media[statusKey] !== MediaStatus.PROCESSING
     ) {
-      media[statusKey] = MediaStatus.PROCESSING;
+      if (
+        entity.method === MediaRequestMethod.TORRENT
+      ) {
+        media[statusKey] = MediaStatus.PROCESSING;
+      } else {
+        media[statusKey] = MediaStatus.AVAILABLE;
+      }
       await mediaRepository.save(media);
     }
 
@@ -1009,10 +1070,16 @@ export class MediaRequestSubscriber implements EntitySubscriberInterface<MediaRe
     }
 
     try {
-      await this.sendToRadarr(event.entity as MediaRequest);
-      await this.sendToSonarr(event.entity as MediaRequest);
+      const entity = event.entity as MediaRequest;
+
+      if (entity.method === MediaRequestMethod.TORRENT) {
+        await this.sendToRadarr(entity);
+        await this.sendToSonarr(entity);
+      } else {
+        await this.sendToStreamingService(entity);
+      }
     } catch (e) {
-      logger.error('Error while sending to *arr in afterUpdate subscriber', {
+      logger.error('Error while processing request in afterUpdate subscriber', {
         label: 'Media Request',
         requestId: (event.entity as MediaRequest).id,
         errorMessage: e instanceof Error ? e.message : String(e),
@@ -1048,10 +1115,16 @@ export class MediaRequestSubscriber implements EntitySubscriberInterface<MediaRe
     }
 
     try {
-      await this.sendToRadarr(event.entity as MediaRequest);
-      await this.sendToSonarr(event.entity as MediaRequest);
+      const entity = event.entity as MediaRequest;
+
+      if (entity.method === MediaRequestMethod.TORRENT) {
+        await this.sendToRadarr(entity);
+        await this.sendToSonarr(entity);
+      } else {
+        await this.sendToStreamingService(entity);
+      }
     } catch (e) {
-      logger.error('Error while sending to *arr in afterInsert subscriber', {
+      logger.error('Error while processing request in afterInsert subscriber', {
         label: 'Media Request',
         requestId: (event.entity as MediaRequest).id,
         errorMessage: e instanceof Error ? e.message : String(e),
