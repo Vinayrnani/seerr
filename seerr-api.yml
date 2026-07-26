@@ -38,6 +38,8 @@ tags:
     description: Endpoints related to getting service (Radarr/Sonarr) details.
   - name: watchlist
     description: Collection of media to watch later
+  - name: stream
+    description: Endpoints related to torrent and direct streaming.
   - name: blocklist
     description: Blocklisted media from discovery page.
 servers:
@@ -8155,6 +8157,85 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OverrideRule'
+  /stream/{requestId}/status:
+    get:
+      summary: Get stream status
+      description: Returns the current status of a torrent stream request.
+      tags:
+        - stream
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Stream status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: number
+                  method:
+                    type: string
+                  status:
+                    type: object
+  /stream/{requestId}/stop:
+    post:
+      summary: Stop stream
+      description: Stops and removes a torrent stream.
+      tags:
+        - stream
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Stream successfully stopped
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /stream/{requestId}/video:
+    get:
+      summary: Stream video
+      description: Serves the video file with HTTP Range support for streaming.
+      tags:
+        - stream
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Video stream
+          content:
+            video/mp4:
+              schema:
+                type: string
+                format: binary
+        '206':
+          description: Partial content (range request)
+          content:
+            video/mp4:
+              schema:
+                type: string
+                format: binary
+        '425':
+          description: Stream not ready yet
+        '401':
+          description: Not authenticated
 security:
   - cookieAuth: []
   - apiKey: []
