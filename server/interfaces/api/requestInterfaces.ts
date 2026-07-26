@@ -1,4 +1,4 @@
-import type { MediaType } from '@server/constants/media';
+import type { MediaRequestMethod, MediaType } from '@server/constants/media';
 import type { MediaRequest } from '@server/entity/MediaRequest';
 import type { NonFunctionProperties, PaginatedResponse } from './common';
 
@@ -19,6 +19,7 @@ export type MediaRequestBody = {
   tvdbId?: number;
   seasons?: number[] | 'all';
   is4k?: boolean;
+  method?: MediaRequestMethod;
   serverId?: number;
   profileId?: number;
   profileName?: string;

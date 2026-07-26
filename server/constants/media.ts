@@ -6,6 +6,12 @@ export enum MediaRequestStatus {
   COMPLETED,
 }
 
+export enum MediaRequestMethod {
+  TORRENT = 'torrent',
+  TORRENT_STREAM = 'torrent_stream',
+  DIRECT_STREAM = 'direct_stream',
+}
+
 export enum MediaType {
   MOVIE = 'movie',
   TV = 'tv',

@@ -2,6 +2,7 @@ import TheMovieDb from '@server/api/themoviedb';
 import { ANIME_KEYWORD_ID } from '@server/api/themoviedb/constants';
 import type { TmdbKeyword } from '@server/api/themoviedb/interfaces';
 import {
+  MediaRequestMethod,
   MediaRequestStatus,
   MediaStatus,
   MediaType,
@@ -598,6 +599,21 @@ export class MediaRequest {
 
   @Column({ default: false })
   public is4k: boolean;
+
+  @Column({
+    type: 'varchar',
+    default: MediaRequestMethod.TORRENT,
+  })
+  public method: MediaRequestMethod;
+
+  @Column({ nullable: true })
+  public qbTorrentHash: string;
+
+  @Column({ nullable: true, type: 'text' })
+  public streamUrl: string;
+
+  @Column({ default: false })
+  public streamWatched: boolean;
 
   @Column({ nullable: true })
   public serverId: number;
