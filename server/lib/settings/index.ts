@@ -177,6 +177,16 @@ export interface DnsCacheSettings {
   forceMaxTtl?: number;
 }
 
+export interface QbittorrentSettings {
+  hostname: string;
+  port: number;
+  username: string;
+  password: string;
+  streamBufferPercent: number;
+  minSeeders: number;
+  streamRetentionDays: number;
+}
+
 export interface NetworkSettings {
   csrfProtection: boolean;
   forceIpv4First: boolean;
@@ -384,6 +394,7 @@ export interface AllSettings {
   tautulli: TautulliSettings;
   radarr: RadarrSettings[];
   sonarr: SonarrSettings[];
+  qbittorrent: QbittorrentSettings;
   public: PublicSettings;
   notifications: NotificationSettings;
   jobs: Record<JobId, JobSettings>;
@@ -462,6 +473,15 @@ class Settings {
       },
       radarr: [],
       sonarr: [],
+      qbittorrent: {
+        hostname: 'qbittorrent',
+        port: 8080,
+        username: '',
+        password: '',
+        streamBufferPercent: 5,
+        minSeeders: 1,
+        streamRetentionDays: 3,
+      },
       public: {
         initialized: false,
       },
@@ -663,6 +683,14 @@ class Settings {
 
   set jellyfin(data: JellyfinSettings) {
     this.data.jellyfin = mergeSettings(this.data.jellyfin, data);
+  }
+
+  get qbittorrent(): QbittorrentSettings {
+    return this.data.qbittorrent;
+  }
+
+  set qbittorrent(data: QbittorrentSettings) {
+    this.data.qbittorrent = mergeSettings(this.data.qbittorrent, data);
   }
 
   get tautulli(): TautulliSettings {
