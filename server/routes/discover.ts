@@ -72,6 +72,7 @@ const QueryFilterOptions = z.object({
   keywords: z.coerce.string().optional(),
   excludeKeywords: z.coerce.string().optional(),
   language: z.coerce.string().optional(),
+  originalLanguage: z.coerce.string().optional(),
   withRuntimeGte: z.coerce.string().optional(),
   withRuntimeLte: z.coerce.string().optional(),
   voteAverageGte: z.coerce.string().optional(),
@@ -96,22 +97,26 @@ const ApiQuerySchema = QueryFilterOptions.omit({
 
 discoverRoutes.get('/movies', async (req, res, next) => {
   const tmdb = createTmdbWithRegionLanguage(req.user);
+  const settings = getSettings();
 
   try {
     const query = ApiQuerySchema.parse(req.query);
     const keywords = query.keywords;
     const excludeKeywords = query.excludeKeywords;
+    const today = new Date().toISOString().split('T')[0];
 
     const data = await tmdb.getDiscoverMovies({
       page: Number(query.page),
       sortBy: query.sortBy as SortOptions,
       language: req.locale ?? query.language,
-      originalLanguage: query.language,
+      originalLanguage: query.originalLanguage,
       genre: query.genre,
       studio: query.studio,
       primaryReleaseDateLte: query.primaryReleaseDateLte
         ? new Date(query.primaryReleaseDateLte).toISOString().split('T')[0]
-        : undefined,
+        : settings.main.hideUnreleased
+          ? today
+          : undefined,
       primaryReleaseDateGte: query.primaryReleaseDateGte
         ? new Date(query.primaryReleaseDateGte).toISOString().split('T')[0]
         : undefined,
@@ -185,6 +190,8 @@ discoverRoutes.get<{ language: string }>(
   '/movies/language/:language',
   async (req, res, next) => {
     const tmdb = createTmdbWithRegionLanguage(req.user);
+    const settings = getSettings();
+    const today = new Date().toISOString().split('T')[0];
 
     try {
       const languages = await tmdb.getLanguages();
@@ -201,6 +208,7 @@ discoverRoutes.get<{ language: string }>(
         page: Number(req.query.page),
         language: (req.query.language as string) ?? req.locale,
         originalLanguage: req.params.language,
+        primaryReleaseDateLte: settings.main.hideUnreleased ? today : undefined,
       });
 
       const media = await Media.getRelatedMedia(
@@ -244,6 +252,8 @@ discoverRoutes.get<{ genreId: string }>(
   '/movies/genre/:genreId',
   async (req, res, next) => {
     const tmdb = createTmdbWithRegionLanguage(req.user);
+    const settings = getSettings();
+    const today = new Date().toISOString().split('T')[0];
 
     try {
       const genres = await tmdb.getMovieGenres({
@@ -262,6 +272,7 @@ discoverRoutes.get<{ genreId: string }>(
         page: Number(req.query.page),
         language: (req.query.language as string) ?? req.locale,
         genre: req.params.genreId as string,
+        primaryReleaseDateLte: settings.main.hideUnreleased ? today : undefined,
       });
 
       const media = await Media.getRelatedMedia(
@@ -305,6 +316,8 @@ discoverRoutes.get<{ studioId: string }>(
   '/movies/studio/:studioId',
   async (req, res, next) => {
     const tmdb = new TheMovieDb();
+    const settings = getSettings();
+    const today = new Date().toISOString().split('T')[0];
 
     try {
       const studio = await tmdb.getStudio(Number(req.params.studioId));
@@ -313,6 +326,7 @@ discoverRoutes.get<{ studioId: string }>(
         page: Number(req.query.page),
         language: (req.query.language as string) ?? req.locale,
         studio: req.params.studioId as string,
+        primaryReleaseDateLte: settings.main.hideUnreleased ? today : undefined,
       });
 
       const media = await Media.getRelatedMedia(
@@ -404,11 +418,13 @@ discoverRoutes.get('/movies/upcoming', async (req, res, next) => {
 
 discoverRoutes.get('/tv', async (req, res, next) => {
   const tmdb = createTmdbWithRegionLanguage(req.user);
+  const settings = getSettings();
 
   try {
     const query = ApiQuerySchema.parse(req.query);
     const keywords = query.keywords;
     const excludeKeywords = query.excludeKeywords;
+    const today = new Date().toISOString().split('T')[0];
     const data = await tmdb.getDiscoverTv({
       page: Number(query.page),
       sortBy: query.sortBy as SortOptions,
@@ -417,11 +433,13 @@ discoverRoutes.get('/tv', async (req, res, next) => {
       network: query.network ? Number(query.network) : undefined,
       firstAirDateLte: query.firstAirDateLte
         ? new Date(query.firstAirDateLte).toISOString().split('T')[0]
-        : undefined,
+        : settings.main.hideUnreleased
+          ? today
+          : undefined,
       firstAirDateGte: query.firstAirDateGte
         ? new Date(query.firstAirDateGte).toISOString().split('T')[0]
         : undefined,
-      originalLanguage: query.language,
+      originalLanguage: query.originalLanguage,
       keywords,
       excludeKeywords,
       withRuntimeGte: query.withRuntimeGte,
@@ -492,6 +510,8 @@ discoverRoutes.get<{ language: string }>(
   '/tv/language/:language',
   async (req, res, next) => {
     const tmdb = createTmdbWithRegionLanguage(req.user);
+    const settings = getSettings();
+    const today = new Date().toISOString().split('T')[0];
 
     try {
       const languages = await tmdb.getLanguages();
@@ -508,6 +528,7 @@ discoverRoutes.get<{ language: string }>(
         page: Number(req.query.page),
         language: (req.query.language as string) ?? req.locale,
         originalLanguage: req.params.language,
+        firstAirDateLte: settings.main.hideUnreleased ? today : undefined,
       });
 
       const media = await Media.getRelatedMedia(
@@ -551,6 +572,8 @@ discoverRoutes.get<{ genreId: string }>(
   '/tv/genre/:genreId',
   async (req, res, next) => {
     const tmdb = createTmdbWithRegionLanguage(req.user);
+    const settings = getSettings();
+    const today = new Date().toISOString().split('T')[0];
 
     try {
       const genres = await tmdb.getTvGenres({
@@ -569,6 +592,7 @@ discoverRoutes.get<{ genreId: string }>(
         page: Number(req.query.page),
         language: (req.query.language as string) ?? req.locale,
         genre: req.params.genreId,
+        firstAirDateLte: settings.main.hideUnreleased ? today : undefined,
       });
 
       const media = await Media.getRelatedMedia(
@@ -612,6 +636,8 @@ discoverRoutes.get<{ networkId: string }>(
   '/tv/network/:networkId',
   async (req, res, next) => {
     const tmdb = new TheMovieDb();
+    const settings = getSettings();
+    const today = new Date().toISOString().split('T')[0];
 
     try {
       const network = await tmdb.getNetwork(Number(req.params.networkId));
@@ -620,6 +646,7 @@ discoverRoutes.get<{ networkId: string }>(
         page: Number(req.query.page),
         language: (req.query.language as string) ?? req.locale,
         network: Number(req.params.networkId),
+        firstAirDateLte: settings.main.hideUnreleased ? today : undefined,
       });
 
       const media = await Media.getRelatedMedia(
@@ -835,6 +862,8 @@ discoverRoutes.get<{ language: string }, GenreSliderItem[]>(
   '/genreslider/movie',
   async (req, res, next) => {
     const tmdb = new TheMovieDb();
+    const settings = getSettings();
+    const today = new Date().toISOString().split('T')[0];
 
     try {
       const mappedGenres: GenreSliderItem[] = [];
@@ -847,6 +876,7 @@ discoverRoutes.get<{ language: string }, GenreSliderItem[]>(
         genres.map(async (genre) => {
           const genreData = await tmdb.getDiscoverMovies({
             genre: genre.id.toString(),
+            primaryReleaseDateLte: settings.main.hideUnreleased ? today : undefined,
           });
 
           mappedGenres.push({
@@ -879,6 +909,8 @@ discoverRoutes.get<{ language: string }, GenreSliderItem[]>(
   '/genreslider/tv',
   async (req, res, next) => {
     const tmdb = new TheMovieDb();
+    const settings = getSettings();
+    const today = new Date().toISOString().split('T')[0];
 
     try {
       const mappedGenres: GenreSliderItem[] = [];
@@ -891,6 +923,7 @@ discoverRoutes.get<{ language: string }, GenreSliderItem[]>(
         genres.map(async (genre) => {
           const genreData = await tmdb.getDiscoverTv({
             genre: genre.id.toString(),
+            firstAirDateLte: settings.main.hideUnreleased ? today : undefined,
           });
 
           mappedGenres.push({

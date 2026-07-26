@@ -1,4 +1,4 @@
-interface TmdbMediaResult {
+export interface TmdbMediaResult {
   id: number;
   media_type: string;
   popularity: number;

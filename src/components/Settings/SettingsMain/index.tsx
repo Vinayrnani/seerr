@@ -38,6 +38,9 @@ const messages = defineMessages('components.Settings.SettingsMain', {
   discoverRegionTip: 'Filter content by regional availability',
   originallanguage: 'Discover Language',
   originallanguageTip: 'Filter content by original language',
+  discoverlanguages: 'Discover Language Pills',
+  discoverlanguagesTip:
+    'Only show selected languages as clickable filter buttons on discover pages',
   blocklistRegion: 'Blocklist Region',
   blocklistRegionTip:
     'Region used for blocklist content scanning (independent of discover settings)',
@@ -62,6 +65,9 @@ const messages = defineMessages('components.Settings.SettingsMain', {
   hideAvailable: 'Hide Available Media',
   hideAvailableTip:
     'Hide available media from the discover pages but not search results',
+  hideUnreleased: 'Hide Unreleased Media',
+  hideUnreleasedTip:
+    'Hide unreleased movies and series from discover pages (only show released content)',
   cacheImages: 'Enable Image Caching',
   cacheImagesTip:
     'Cache externally sourced images (requires a significant amount of disk space)',
@@ -171,9 +177,11 @@ const SettingsMain = () => {
             applicationUrl: data?.applicationUrl,
             hideAvailable: data?.hideAvailable,
             hideBlocklisted: data?.hideBlocklisted,
+            hideUnreleased: data?.hideUnreleased,
             locale: data?.locale ?? 'en',
             discoverRegion: data?.discoverRegion,
             originalLanguage: data?.originalLanguage,
+            discoverLanguages: data?.discoverLanguages,
             streamingRegion: data?.streamingRegion || 'US',
             blocklistRegion: data?.blocklistRegion || '',
             blocklistLanguage: data?.blocklistLanguage || '',
@@ -193,10 +201,12 @@ const SettingsMain = () => {
                 applicationUrl: values.applicationUrl,
                 hideAvailable: values.hideAvailable,
                 hideBlocklisted: values.hideBlocklisted,
+                hideUnreleased: values.hideUnreleased,
                 locale: values.locale,
                 discoverRegion: values.discoverRegion,
                 streamingRegion: values.streamingRegion,
                 originalLanguage: values.originalLanguage,
+                discoverLanguages: values.discoverLanguages,
                 blocklistRegion: values.blocklistRegion,
                 blocklistLanguage: values.blocklistLanguage,
                 blocklistedTags: values.blocklistedTags,
@@ -395,6 +405,23 @@ const SettingsMain = () => {
                   </div>
                 </div>
                 <div className="form-row">
+                  <label htmlFor="discoverLanguages" className="text-label">
+                    <span>{intl.formatMessage(messages.discoverlanguages)}</span>
+                    <span className="label-tip">
+                      {intl.formatMessage(messages.discoverlanguagesTip)}
+                    </span>
+                  </label>
+                  <div className="form-input-area">
+                    <div className="form-input-field relative z-20">
+                      <LanguageSelector
+                        setFieldValue={setFieldValue}
+                        value={values.discoverLanguages}
+                        fieldName="discoverLanguages"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="form-row">
                   <label htmlFor="streamingRegion" className="text-label">
                     <span>{intl.formatMessage(messages.streamingRegion)}</span>
                     <span className="label-tip">
@@ -533,6 +560,29 @@ const SettingsMain = () => {
                         setFieldValue(
                           'hideBlocklisted',
                           !values.hideBlocklisted
+                        );
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <label htmlFor="hideUnreleased" className="checkbox-label">
+                    <span className="mr-2">
+                      {intl.formatMessage(messages.hideUnreleased)}
+                    </span>
+                    <span className="label-tip">
+                      {intl.formatMessage(messages.hideUnreleasedTip)}
+                    </span>
+                  </label>
+                  <div className="form-input-area">
+                    <Field
+                      type="checkbox"
+                      id="hideUnreleased"
+                      name="hideUnreleased"
+                      onChange={() => {
+                        setFieldValue(
+                          'hideUnreleased',
+                          !values.hideUnreleased
                         );
                       }}
                     />

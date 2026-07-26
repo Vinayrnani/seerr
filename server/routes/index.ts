@@ -55,7 +55,7 @@ router.get<unknown, StatusResponse>('/status', async (req, res) => {
   let updateAvailable = false;
   let commitsBehind = 0;
 
-  if (currentVersion.startsWith('develop-') && commitTag !== 'local') {
+  if (currentVersion.startsWith('develop-') && commitTag && commitTag !== 'local') {
     const commits = await githubApi.getSeerrCommits();
 
     if (commits.length) {
@@ -74,7 +74,7 @@ router.get<unknown, StatusResponse>('/status', async (req, res) => {
         commitsBehind = commitIndex;
       }
     }
-  } else if (commitTag !== 'local') {
+  } else if (commitTag && commitTag !== 'local') {
     const releases = await githubApi.getSeerrReleases();
 
     if (releases.length) {

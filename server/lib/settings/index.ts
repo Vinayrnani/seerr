@@ -141,12 +141,14 @@ export interface MainSettings {
   };
   hideAvailable: boolean;
   hideBlocklisted: boolean;
+  hideUnreleased: boolean;
   localLogin: boolean;
   mediaServerLogin: boolean;
   newPlexLogin: boolean;
   discoverRegion: string;
   streamingRegion: string;
   originalLanguage: string;
+  discoverLanguages: string;
   blocklistRegion: string;
   blocklistLanguage: string;
   blocklistedTags: string;
@@ -193,6 +195,7 @@ interface FullPublicSettings extends PublicSettings {
   applicationUrl: string;
   hideAvailable: boolean;
   hideBlocklisted: boolean;
+  hideUnreleased: boolean;
   localLogin: boolean;
   mediaServerLogin: boolean;
   movie4kEnabled: boolean;
@@ -200,6 +203,7 @@ interface FullPublicSettings extends PublicSettings {
   discoverRegion: string;
   streamingRegion: string;
   originalLanguage: string;
+  discoverLanguages: string;
   mediaServerType: number;
   jellyfinExternalHost?: string;
   jellyfinForgotPasswordUrl?: string;
@@ -414,12 +418,14 @@ class Settings {
         },
         hideAvailable: false,
         hideBlocklisted: false,
+        hideUnreleased: true,
         localLogin: true,
         mediaServerLogin: true,
         newPlexLogin: true,
         discoverRegion: '',
         streamingRegion: '',
         originalLanguage: '',
+        discoverLanguages: '',
         blocklistRegion: '',
         blocklistLanguage: '',
         blocklistedTags: '',
@@ -707,9 +713,10 @@ class Settings {
       ...this.data.public,
       applicationTitle: this.data.main.applicationTitle,
       applicationUrl: this.data.main.applicationUrl,
-      hideAvailable: this.data.main.hideAvailable,
-      hideBlocklisted: this.data.main.hideBlocklisted,
-      localLogin: this.data.main.localLogin,
+    hideAvailable: this.data.main.hideAvailable,
+    hideBlocklisted: this.data.main.hideBlocklisted,
+    hideUnreleased: this.data.main.hideUnreleased,
+    localLogin: this.data.main.localLogin,
       mediaServerLogin: this.data.main.mediaServerLogin,
       jellyfinExternalHost: this.data.jellyfin.externalHostname,
       jellyfinForgotPasswordUrl: this.data.jellyfin.jellyfinForgotPasswordUrl,
@@ -722,6 +729,7 @@ class Settings {
       discoverRegion: this.data.main.discoverRegion,
       streamingRegion: this.data.main.streamingRegion,
       originalLanguage: this.data.main.originalLanguage,
+      discoverLanguages: this.data.main.discoverLanguages,
       mediaServerType: this.main.mediaServerType,
       partialRequestsEnabled: this.data.main.partialRequestsEnabled,
       enableSpecialEpisodes: this.data.main.enableSpecialEpisodes,

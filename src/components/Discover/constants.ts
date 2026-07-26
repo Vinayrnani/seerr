@@ -101,6 +101,7 @@ export const QueryFilterOptions = z.object({
   keywords: z.string().optional(),
   excludeKeywords: z.string().optional(),
   language: z.string().optional(),
+  originalLanguage: z.string().optional(),
   withRuntimeGte: z.string().optional(),
   withRuntimeLte: z.string().optional(),
   voteAverageGte: z.string().optional(),
@@ -168,6 +169,10 @@ export const prepareFilterValues = (
 
   if (values.language) {
     filterValues.language = values.language;
+  }
+
+  if (values.originalLanguage) {
+    filterValues.originalLanguage = values.originalLanguage;
   }
 
   if (values.withRuntimeGte) {

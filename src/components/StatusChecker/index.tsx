@@ -55,7 +55,7 @@ const StatusChecker = () => {
       show={
         !alertDismissed &&
         ((hasPermission(Permission.ADMIN) && data.restartRequired) ||
-          data.commitTag !== process.env.commitTag)
+          (!!data.commitTag && data.commitTag !== process.env.commitTag))
       }
     >
       {hasPermission(Permission.ADMIN) && data.restartRequired ? (

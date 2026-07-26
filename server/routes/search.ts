@@ -1,5 +1,8 @@
 import TheMovieDb from '@server/api/themoviedb';
-import type { TmdbSearchMultiResponse } from '@server/api/themoviedb/interfaces';
+import type {
+  TmdbMediaResult,
+  TmdbSearchMultiResponse,
+} from '@server/api/themoviedb/interfaces';
 import Media from '@server/entity/Media';
 import { findSearchProvider } from '@server/lib/search';
 import logger from '@server/logger';
@@ -11,6 +14,7 @@ const searchRoutes = Router();
 searchRoutes.get('/', async (req, res, next) => {
   const queryString = req.query.query as string;
   const searchProvider = findSearchProvider(queryString.toLowerCase());
+  const originalLanguage = req.query.originalLanguage as string;
   let results: TmdbSearchMultiResponse;
 
   try {
@@ -31,6 +35,17 @@ searchRoutes.get('/', async (req, res, next) => {
         page: Number(req.query.page),
         language: (req.query.language as string) ?? req.locale,
       });
+    }
+
+    if (originalLanguage && originalLanguage !== 'all') {
+      const languages = originalLanguage.split('|');
+      results.results = results.results.filter(
+        (result) =>
+          'original_language' in result &&
+          languages.includes((result as TmdbMediaResult).original_language)
+      );
+      results.total_results = results.results.length;
+      results.total_pages = 1;
     }
 
     const media = await Media.getRelatedMedia(

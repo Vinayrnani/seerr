@@ -5426,6 +5426,11 @@ paths:
           schema:
             type: string
             example: en
+        - in: query
+          name: originalLanguage
+          schema:
+            type: string
+            example: te
       responses:
         '200':
           description: Results
@@ -5548,6 +5553,11 @@ paths:
           schema:
             type: string
             example: en
+        - in: query
+          name: originalLanguage
+          schema:
+            type: string
+            example: te
         - in: query
           name: genre
           schema:
@@ -5874,6 +5884,11 @@ paths:
           schema:
             type: string
             example: en
+        - in: query
+          name: originalLanguage
+          schema:
+            type: string
+            example: te
         - in: query
           name: genre
           schema:
